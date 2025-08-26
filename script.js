@@ -18,15 +18,10 @@
 
   let assignments = [];
 
-  // 🚀 Extended seed() to preload Day 4 assignments with PDF links
   const seed = ()=> ([
     {id: id(), title:'Intro to FDP - Reflection', description:'Write 500 words on FDP learnings', module:'Module 1', dueDate: nextDate(3), status:'Pending', link:''},
     {id: id(), title:'Create HTML Skeleton', description:'Build an index page and link styles/scripts', module:'Module 2', dueDate: nextDate(7), status:'In Progress', link:''},
-    {id: id(), title:'Database Design Task', description:'Normalize STUDENT table up to 3NF', module:'Module 3', dueDate: nextDate(10), status:'Pending', link:''},
-
-    // ✅ New preloaded PDFs
-    {id: id(), title:'Day 4 - Assignment 1: Literature Mapping', description:'PDF file for Literature Mapping exercise.', module:'Module 4', dueDate: nextDate(2), status:'Pending', link:'Day%204%20assignment%201%20Literature%20Mapping.pdf'},
-    {id: id(), title:'Day 4 - Assignment 2: Webpage', description:'PDF file showing webpage assignment.', module:'Module 4', dueDate: nextDate(2), status:'Pending', link:'Day4%20assignment%202%20webpage.pdf'}
+    {id: id(), title:'Database Design Task', description:'Normalize STUDENT table up to 3NF', module:'Module 3', dueDate: nextDate(10), status:'Pending', link:''}
   ]);
 
   function id(){ return 'a'+Math.random().toString(36).slice(2,9); }
@@ -34,10 +29,43 @@
 
   function load(){
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) assignments = JSON.parse(raw);
-    else { assignments = seed(); save(); }
+    if(raw) {
+      assignments = JSON.parse(raw);
+
+      // ✅ Ensure Day 4 assignments exist
+      const required = [
+        {
+          title:'Day 4 - Assignment 1: Literature Mapping',
+          description:'PDF file for Literature Mapping exercise.',
+          module:'Module 4',
+          dueDate: nextDate(2),
+          status:'Pending',
+          link:'Day%204%20assignment%201%20Literature%20Mapping.pdf'
+        },
+        {
+          title:'Day 4 - Assignment 2: Webpage',
+          description:'PDF file showing webpage assignment.',
+          module:'Module 4',
+          dueDate: nextDate(2),
+          status:'Pending',
+          link:'Day4%20assignment%202%20webpage.pdf'
+        }
+      ];
+
+      required.forEach(r=>{
+        if(!assignments.some(a=>a.title===r.title)) {
+          assignments.push({...r, id:id()});
+        }
+      });
+      save();
+
+    } else {
+      assignments = seed();
+      save();
+    }
     render();
   }
+
   function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments)); }
 
   function render(){
@@ -77,7 +105,7 @@
           <div class="small">Status: ${a.status}</div>
         </div>
         <div style="margin-top:.5rem;display:flex;gap:.4rem">
-          ${a.link?`<a class="small" href="${a.link}" target="_blank">📄 View PDF</a>`:''}
+          ${a.link?`<a class="small" href="${a.link}" target="_blank">📄 Open PDF</a>`:''}
           <button class="small toggle">Mark ${a.status==='Completed'?'Pending':'Completed'}</button>
           <button class="small edit">Edit</button>
           <button class="small delete">Delete</button>
@@ -95,7 +123,7 @@
     form.id.value=a.id; $('#modalTitle').textContent='Edit Assignment'; openModal(); }
   function removeAssignment(id){ if(!confirm('Delete this assignment?')) return;
     assignments = assignments.filter(a=>a.id!==id); save(); render(); }
-  function toggleStatus(id){ const a = assignments.find(x=>a.id===id); if(!a) return;
+  function toggleStatus(id){ const a = assignments.find(x=>x.id===id); if(!a) return;
     a.status = a.status==='Completed' ? 'Pending' : 'Completed'; save(); render(); }
 
   function openModal(){ modal.classList.remove('hidden'); }
@@ -142,5 +170,3 @@
 
   load();
 })();
-
-
